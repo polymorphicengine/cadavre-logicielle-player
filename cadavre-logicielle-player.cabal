@@ -1,0 +1,39 @@
+cabal-version:      3.0
+name:               cadavre-logicielle-player
+
+-- The package version.
+-- See the Haskell package versioning policy (PVP) for standards
+-- guiding when and how versions should be incremented.
+-- https://pvp.haskell.org
+-- PVP summary:     +-+------- breaking API changes
+--                  | | +----- non-breaking API additions
+--                  | | | +--- code changes with no API change
+version:            0.1.0.0
+license:            GPL-3.0-or-later
+license-file:       LICENSE
+author:             Martin Gius
+maintainer:         gius_martin@yahoo.de
+build-type:         Simple
+extra-doc-files:    CHANGELOG.md, README.md
+
+
+executable cl-player
+    main-is:          Main.hs
+    other-modules:    Editor.Backend
+                      Editor.Frontend
+                      Editor.Setup
+                      Editor.UI
+                      Editor.CommandLine
+    build-depends:    base,
+                      containers,
+                      threepenny-gui,
+                      filepath,
+                      directory,
+                      optparse-applicative
+    hs-source-dirs:   app
+    default-language: Haskell2010
+    ghc-options: -threaded
+                 -Wall
+    ld-options: -Wl,-rpath -Wl,$ORIGIN/c-libs
+    if os(darwin)
+       ld-options: -mmacosx-version-min=10.9

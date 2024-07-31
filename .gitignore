@@ -1,6 +1,7 @@
 dist
 dist-*
 cabal-dev
+node_modules
 *.o
 *.hi
 *.hie
@@ -21,3 +22,4 @@ cabal.project.local
 cabal.project.local~
 .HTF/
 .ghc.environment.*
+package-lock.json
