@@ -23,6 +23,8 @@ import Editor.UI
 import Foreign.JavaScript (JSObject)
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core as C hiding (text)
+import qualified Network.Socket as N
+import Sound.Osc.Fd as O
 
 data EvalMode
   = EvalBlock
@@ -30,13 +32,26 @@ data EvalMode
   | EvalWhole
   deriving (Eq, Show)
 
-evalContentAtCursor :: EvalMode -> JSObject -> UI ()
-evalContentAtCursor mode cm = do
+evalContentAtCursor :: Udp -> EvalMode -> JSObject -> UI ()
+evalContentAtCursor local mode cm = do
   line <- getCursorLine cm
-  evalContentAtLine mode cm line
+  evalContentAtLine local mode cm line
 
-evalContentAtLine :: EvalMode -> JSObject -> Int -> UI ()
-evalContentAtLine mode cm line = do
+evalContentAtLine :: Udp -> EvalMode -> JSObject -> Int -> UI ()
+evalContentAtLine local mode cm line = do
   editorContent <- getValue cm
   out <- getOutputEl
-  void $ element out # set UI.text editorContent
+  addr <- liftIO $ N.getAddrInfo Nothing (Just "127.0.0.1") Nothing
+  let (N.SockAddrInet _ a) = N.addrAddress (head addr)
+      remote = N.SockAddrInet 2323 a
+  liftIO $ O.sendTo local (O.p_message "/ping" []) remote
+
+serve :: Udp -> Element -> UI ()
+serve udp out = do
+  m <- liftIO $ recvMessage udp
+  act out m
+  serve udp out
+
+act :: Element -> Maybe O.Message -> UI ()
+act out Nothing = element out # set UI.text "Not a message?" >> return ()
+act out (Just m) = element out # set UI.text ("Unhandeled message: " ++ show m) >> return ()

@@ -20,11 +20,13 @@ module Editor.Setup (setup) where
     along with this library.  If not, see <http://www.gnu.org/licenses/>.
 -}
 
+import Control.Concurrent (forkIO)
 import Control.Monad (void)
 import Editor.Backend
 import Editor.Frontend
 import Editor.UI
 import Graphics.UI.Threepenny.Core as C hiding (defaultConfig, text)
+import Sound.Osc.Fd as O
 
 setup :: Window -> UI ()
 setup win = void $ do
@@ -37,10 +39,13 @@ setup win = void $ do
 setupBackend :: UI ()
 setupBackend = do
   win <- askWindow
+  local <- liftIO $ udpServer "127.0.0.1" 2324
+  out <- getOutputEl
+  _ <- liftIO $ forkIO $ runUI win $ serve local out
 
-  createHaskellFunction "evalBlockAtCursor" (runUI win . evalContentAtCursor EvalBlock)
-  createHaskellFunction "evalLineAtCursor" (runUI win . evalContentAtCursor EvalLine)
-  createHaskellFunction "evalWhole" (runUI win . evalContentAtCursor EvalWhole)
+  createHaskellFunction "evalBlockAtCursor" (runUI win . evalContentAtCursor local EvalBlock)
+  createHaskellFunction "evalLineAtCursor" (runUI win . evalContentAtCursor local EvalLine)
+  createHaskellFunction "evalWhole" (runUI win . evalContentAtCursor local EvalWhole)
 
 addFileInputAndSettings :: UI ()
 addFileInputAndSettings = do

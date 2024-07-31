@@ -29,7 +29,9 @@ executable cl-player
                       threepenny-gui,
                       filepath,
                       directory,
-                      optparse-applicative
+                      optparse-applicative,
+                      network,
+                      hosc
     hs-source-dirs:   app
     default-language: Haskell2010
     ghc-options: -threaded
