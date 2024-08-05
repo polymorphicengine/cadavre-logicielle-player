@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 module Editor.Backend where
 
 {-
@@ -18,7 +20,7 @@ module Editor.Backend where
     along with this library.  If not, see <http://www.gnu.org/licenses/>.
 -}
 
-import Control.Monad (void)
+import Editor.Parse
 import Editor.UI
 import Foreign.JavaScript (JSObject)
 import qualified Graphics.UI.Threepenny as UI
@@ -29,22 +31,28 @@ import Sound.Osc.Fd as O
 data EvalMode
   = EvalBlock
   | EvalLine
-  | EvalWhole
   deriving (Eq, Show)
 
-evalContentAtCursor :: Udp -> EvalMode -> JSObject -> UI ()
-evalContentAtCursor local mode cm = do
-  line <- getCursorLine cm
-  evalContentAtLine local mode cm line
+evalContentAtCursor :: Udp -> N.SockAddr -> EvalMode -> JSObject -> UI ()
+evalContentAtCursor local remote mode cm = parseBlocks mode cm >>= actOnCommand local remote
 
-evalContentAtLine :: Udp -> EvalMode -> JSObject -> Int -> UI ()
-evalContentAtLine local mode cm line = do
-  editorContent <- getValue cm
-  out <- getOutputEl
-  addr <- liftIO $ N.getAddrInfo Nothing (Just "127.0.0.1") Nothing
-  let (N.SockAddrInet _ a) = N.addrAddress (head addr)
-      remote = N.SockAddrInet 2323 a
-  liftIO $ O.sendTo local (O.p_message "/ping" []) remote
+parseBlocks :: EvalMode -> JSObject -> UI Command
+parseBlocks mode cm = do
+  line <- getCursorLine cm
+  contents <- getValue cm
+  let blockMaybe = case mode of
+        EvalLine -> getLineContent line (linesNum contents)
+        EvalBlock -> getBlock line $ getBlocks contents
+  case blockMaybe of
+    Nothing -> error "Failed to get block!"
+    Just b -> case runParser (bContent b) of
+      Left err -> error $ show err
+      Right c -> return c
+
+actOnCommand :: Udp -> N.SockAddr -> Command -> UI ()
+actOnCommand local addr (Statement str) = liftIO $ O.sendTo local (O.p_message "/eval" [O.string str]) addr
+actOnCommand local addr (Type str) = liftIO $ O.sendTo local (O.p_message "/type" [O.string str]) addr
+actOnCommand local addr Ping = liftIO $ O.sendTo local (O.p_message "/ping" []) addr
 
 serve :: Udp -> Element -> UI ()
 serve udp out = do

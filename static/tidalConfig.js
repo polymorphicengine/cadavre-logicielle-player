@@ -1,7 +1,6 @@
 const commands = {
   evalBlockAtCursor: evalBlockAtCursor,
   evalLineAtCursor: evalLineAtCursor,
-  evalWhole: evalWhole,
   saveFile: saveFile,
   loadFile: loadFile,
   increaseFontSize: increaseFontSize,

@@ -26,6 +26,7 @@ import Editor.Backend
 import Editor.Frontend
 import Editor.UI
 import Graphics.UI.Threepenny.Core as C hiding (defaultConfig, text)
+import qualified Network.Socket as N
 import Sound.Osc.Fd as O
 
 setup :: Window -> UI ()
@@ -40,19 +41,22 @@ setupBackend :: UI ()
 setupBackend = do
   win <- askWindow
   local <- liftIO $ udpServer "127.0.0.1" 2324
+  addr <- liftIO $ N.getAddrInfo Nothing (Just "127.0.0.1") Nothing
+  let (N.SockAddrInet _ a) = N.addrAddress (head addr)
+      remote = N.SockAddrInet 2323 a
+
   out <- getOutputEl
   _ <- liftIO $ forkIO $ runUI win $ serve local out
 
-  createHaskellFunction "evalBlockAtCursor" (runUI win . evalContentAtCursor local EvalBlock)
-  createHaskellFunction "evalLineAtCursor" (runUI win . evalContentAtCursor local EvalLine)
-  createHaskellFunction "evalWhole" (runUI win . evalContentAtCursor local EvalWhole)
+  createHaskellFunction "evalBlockAtCursor" (runUI win . evalContentAtCursor local remote EvalBlock)
+  createHaskellFunction "evalLineAtCursor" (runUI win . evalContentAtCursor local remote EvalLine)
 
 addFileInputAndSettings :: UI ()
 addFileInputAndSettings = do
   win <- askWindow
   body <- getBody win
   void $
-    (element body)
+    element body
       #+ [ fileInput,
            tidalSettings
          ]

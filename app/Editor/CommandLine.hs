@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 module Editor.CommandLine where
 
 {-
@@ -20,7 +22,7 @@ module Editor.CommandLine where
 
 import Options.Applicative
 
-data Config = Config
+newtype Config = Config
   { tpPort :: Int
   }
   deriving (Eq, Show)
