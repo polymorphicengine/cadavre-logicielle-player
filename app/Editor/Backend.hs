@@ -20,6 +20,7 @@ module Editor.Backend where
     along with this library.  If not, see <http://www.gnu.org/licenses/>.
 -}
 
+import Control.Concurrent.MVar
 import Editor.Parse
 import Editor.UI
 import Foreign.JavaScript (JSObject)
@@ -33,33 +34,55 @@ data EvalMode
   | EvalLine
   deriving (Eq, Show)
 
-evalContentAtCursor :: Udp -> N.SockAddr -> EvalMode -> JSObject -> UI ()
-evalContentAtCursor local remote mode cm = parseBlocks mode cm >>= actOnCommand local remote
+type LastBlock = MVar (JSObject, Int, Int)
 
-parseBlocks :: EvalMode -> JSObject -> UI Command
-parseBlocks mode cm = do
+evalContentAtCursor :: Udp -> N.SockAddr -> EvalMode -> LastBlock -> JSObject -> UI ()
+evalContentAtCursor local remote mode bMV cm = parseBlocks mode cm bMV >>= actOnCommand local remote
+
+parseBlocks :: EvalMode -> JSObject -> LastBlock -> UI Command
+parseBlocks mode cm bMV = do
   line <- getCursorLine cm
   contents <- getValue cm
   let blockMaybe = case mode of
         EvalLine -> getLineContent line (linesNum contents)
         EvalBlock -> getBlock line $ getBlocks contents
   case blockMaybe of
-    Nothing -> error "Failed to get block!"
-    Just b -> case runParser (bContent b) of
-      Left err -> error $ show err
-      Right c -> return c
+    Nothing -> getOutputEl >>= \out -> element out # set UI.text "Failed to get Block" >> return Ping
+    Just b -> do
+      liftIO $ putMVar bMV (cm, bStart b, bEnd b)
+      case runParser (bContent b) of
+        Left err -> error $ show err
+        Right c -> return c
 
 actOnCommand :: Udp -> N.SockAddr -> Command -> UI ()
 actOnCommand local addr (Statement str) = liftIO $ O.sendTo local (O.p_message "/eval" [O.string str]) addr
 actOnCommand local addr (Type str) = liftIO $ O.sendTo local (O.p_message "/type" [O.string str]) addr
 actOnCommand local addr Ping = liftIO $ O.sendTo local (O.p_message "/ping" []) addr
+actOnCommand local addr (Definition n t c) = defAction n t c local addr
 
-serve :: Udp -> Element -> UI ()
-serve udp out = do
+serve :: Udp -> Element -> LastBlock -> UI ()
+serve udp out bMV = do
   m <- liftIO $ recvMessage udp
-  act out m
-  serve udp out
+  act out bMV m
+  serve udp out bMV
 
-act :: Element -> Maybe O.Message -> UI ()
-act out Nothing = element out # set UI.text "Not a message?" >> return ()
-act out (Just m) = element out # set UI.text ("Unhandeled message: " ++ show m) >> return ()
+act :: Element -> LastBlock -> Maybe O.Message -> UI ()
+act _ bMV (Just (Message "/ok" [])) = do
+  (cm, st, end) <- liftIO $ takeMVar bMV
+  flashSuccess cm st end
+act out bMV (Just (Message "/ok" [AsciiString x])) = do
+  (cm, st, end) <- liftIO $ takeMVar bMV
+  _ <- element out # set UI.text (ascii_to_string x)
+  flashSuccess cm st end
+act out bMV (Just (Message "/error" [AsciiString e])) = do
+  (cm, st, end) <- liftIO $ takeMVar bMV
+  _ <- element out # set UI.text ("Error:" ++ ascii_to_string e)
+  flashError cm st end
+act out _ (Just m) = element out # set UI.text ("Unhandeled message: " ++ show m) >> return ()
+act out _ Nothing = element out # set UI.text "Not a message?" >> return ()
+
+defAction :: String -> String -> String -> Udp -> N.SockAddr -> UI ()
+defAction name t c local remote = liftIO $ O.sendTo local (O.p_message "/define" [O.string name, O.string t, O.string code, O.string def]) remote
+  where
+    def = "let " ++ name ++ " = _define" ++ t ++ "\"" ++ name ++ "\""
+    code = "streamSetF tidal " ++ show name ++ " " ++ c

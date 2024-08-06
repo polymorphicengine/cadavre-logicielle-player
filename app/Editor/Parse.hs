@@ -9,6 +9,7 @@ type Position = (Int, Int)
 data Command
   = Type String
   | Statement String
+  | Definition String String String
   | Ping
   deriving (Show)
 
@@ -34,6 +35,22 @@ parseType = do
   s <- many anyChar
   return (Type s)
 
+parseDefType :: Parser String
+parseDefType = string "Int" <|> string "Double" <|> string "Bool" <|> string "VM"
+
+parseDef :: Parser Command
+parseDef = do
+  whitespace
+  _ <- string ":define"
+  whitespace
+  l <- letter
+  name <- many (letter <|> digit)
+  whitespace
+  t <- parseDefType
+  whitespace
+  c <- many anyChar
+  return (Definition (l : name) t c)
+
 parsePing :: Parser Command
 parsePing = do
   whitespace
@@ -41,10 +58,10 @@ parsePing = do
   return Ping
 
 parseStatement :: Parser Command
-parseStatement = Statement <$> many anyChar
+parseStatement = Statement <$> many1 anyChar
 
 parseCommand :: Parser Command
-parseCommand = try parseType <|> try parsePing <|> parseStatement
+parseCommand = try parseDef <|> try parseType <|> try parsePing <|> parseStatement
 
 -- parsing blocks
 

@@ -21,6 +21,7 @@ module Editor.Setup (setup) where
 -}
 
 import Control.Concurrent (forkIO)
+import Control.Concurrent.MVar (newEmptyMVar)
 import Control.Monad (void)
 import Editor.Backend
 import Editor.Frontend
@@ -46,10 +47,11 @@ setupBackend = do
       remote = N.SockAddrInet 2323 a
 
   out <- getOutputEl
-  _ <- liftIO $ forkIO $ runUI win $ serve local out
+  bMV <- liftIO $ newEmptyMVar
+  _ <- liftIO $ forkIO $ runUI win $ serve local out bMV
 
-  createHaskellFunction "evalBlockAtCursor" (runUI win . evalContentAtCursor local remote EvalBlock)
-  createHaskellFunction "evalLineAtCursor" (runUI win . evalContentAtCursor local remote EvalLine)
+  createHaskellFunction "evalBlockAtCursor" (runUI win . evalContentAtCursor local remote EvalBlock bMV)
+  createHaskellFunction "evalLineAtCursor" (runUI win . evalContentAtCursor local remote EvalLine bMV)
 
 addFileInputAndSettings :: UI ()
 addFileInputAndSettings = do
