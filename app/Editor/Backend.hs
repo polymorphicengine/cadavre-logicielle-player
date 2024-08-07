@@ -24,6 +24,7 @@ module Editor.Backend where
 
 import Control.Concurrent.MVar
 import Control.Monad.State hiding (State)
+import Data.Time (UTCTime, diffUTCTime, getCurrentTime)
 import Editor.Parse
 import Editor.UI
 import Foreign.JavaScript (JSObject)
@@ -69,7 +70,6 @@ evalContentAtCursor mode cm = parseBlocks mode cm >>= actOnCommand
 
 parseBlocks :: EvalMode -> JSObject -> Game Command
 parseBlocks mode cm = do
-  rMV <- gets sRange
   line <- liftUI $ getCursorLine cm
   contents <- liftUI $ getValue cm
   let blockMaybe = case mode of
@@ -78,10 +78,9 @@ parseBlocks mode cm = do
   case blockMaybe of
     Nothing -> return NoCommand
     Just b -> do
-      liftIO $ putMVar rMV (bStart b, bEnd b)
       case runParser (bContent b) of
-        Left err -> error $ show err
-        Right c -> return c
+        Left err -> liftUI (addMessage $ show err) >> return NoCommand
+        Right c -> checkTimeout (bStart b, bEnd b) >> return c
 
 sendMessageRemote :: Packet -> Game ()
 sendMessageRemote p = do
@@ -111,10 +110,30 @@ newRemoteAddress addr port = do
       remote = N.SockAddrInet (fromIntegral port) a
   liftIO $ modifyMVar_ rMV (const $ return remote)
   liftUI $ addMessage $ "Changed address of the table to " ++ addr ++ ":" ++ show port
-  rangeMV <- gets sRange
-  (st, end) <- liftIO $ takeMVar rangeMV
-  cm <- liftUI getCodeMirror
-  liftUI $ flashSuccess cm st end
+  successAction
+
+checkTimeout :: (Int, Int) -> Game ()
+checkTimeout x = liftIO getCurrentTime >>= timeout x
+
+timeout :: (Int, Int) -> UTCTime -> Game ()
+timeout x t = do
+    rMV <- gets sRange
+    success <- liftIO $ tryPutMVar rMV x
+    unless
+        success
+        ( do
+            cur <- liftIO getCurrentTime
+            ( if diffUTCTime cur t >= 10
+                then do
+                cm <- liftUI getCodeMirror
+                liftUI $ uncurry (flashError cm) x
+                liftUI $ addMessage "No response from table.."
+                void $ liftIO $ takeMVar rMV
+                else timeout x t
+            )
+        )
+
+
 
 --------------------------------------------------------
 --------- acting on responses from the table -----------
@@ -128,22 +147,29 @@ playingHand = do
   playingHand
 
 act :: Maybe O.Message -> Game ()
-act (Just (Message "/ok" [])) = do
-  rMV <- gets sRange
-  (st, end) <- liftIO $ takeMVar rMV
-  cm <- liftUI getCodeMirror
-  liftUI $ flashSuccess cm st end
-act (Just (Message "/ok" [AsciiString x])) = do
-  rMV <- gets sRange
-  (st, end) <- liftIO $ takeMVar rMV
-  liftUI $ addMessage (ascii_to_string x)
-  cm <- liftUI getCodeMirror
-  liftUI $ flashSuccess cm st end
-act (Just (Message "/error" [AsciiString e])) = do
-  rMV <- gets sRange
-  (st, end) <- liftIO $ takeMVar rMV
-  liftUI $ addMessage (ascii_to_string e)
-  cm <- liftUI getCodeMirror
-  liftUI $ flashError cm st end
+act (Just (Message "/ok" [])) = successAction
+act (Just (Message "/ok" [AsciiString x])) = successAction >> liftUI $ addMessage (ascii_to_string x)
+act (Just (Message "/error" [AsciiString e])) = errorAction >> liftUI $ addMessage (ascii_to_string e)
 act (Just m) = liftUI $ addMessage ("Unhandeled message: " ++ show m)
 act Nothing = liftUI $ addMessage "Not a message?"
+
+
+successAction :: Game ()
+successAction = do
+    rMV <- gets sRange
+    may <- liftIO $ tryTakeMVar rMV
+    case may of
+       Nothing -> return ()
+       Just (st,end) -> do
+                cm <- liftUI getCodeMirror
+                liftUI $ flashSuccess cm st end
+
+errorAction :: Game ()
+errorAction = do
+    rMV <- gets sRange
+    may <- liftIO $ tryTakeMVar rMV
+    case may of
+       Nothing -> return ()
+       Just (st,end) -> do
+                cm <- liftUI getCodeMirror
+                liftUI $ flashError cm st end
