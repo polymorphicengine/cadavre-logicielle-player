@@ -21,7 +21,7 @@ module Editor.Setup (setup) where
 -}
 
 import Control.Concurrent (forkIO)
-import Control.Concurrent.MVar (newEmptyMVar)
+import Control.Concurrent.MVar (newEmptyMVar, newMVar)
 import Control.Monad (void)
 import Editor.Backend
 import Editor.Frontend
@@ -46,12 +46,13 @@ setupBackend = do
   let (N.SockAddrInet _ a) = N.addrAddress (head addr)
       remote = N.SockAddrInet 2323 a
 
-  out <- getOutputEl
-  bMV <- liftIO $ newEmptyMVar
-  _ <- liftIO $ forkIO $ runUI win $ serve local out bMV
+  rMV <- liftIO newEmptyMVar
+  remMV <- liftIO $ newMVar remote
+  let st = State local remMV rMV
+  _ <- liftIO $ forkIO $ runUI win $ void $ runGame playingHand st
 
-  createHaskellFunction "evalBlockAtCursor" (runUI win . evalContentAtCursor local remote EvalBlock bMV)
-  createHaskellFunction "evalLineAtCursor" (runUI win . evalContentAtCursor local remote EvalLine bMV)
+  createHaskellFunction "evalBlockAtCursor" (\cm -> runUI win $ void $ runGame (evalContentAtCursor EvalBlock cm) st)
+  createHaskellFunction "evalLineAtCursor" (\cm -> runUI win $ void $ runGame (evalContentAtCursor EvalLine cm) st)
 
 addFileInputAndSettings :: UI ()
 addFileInputAndSettings = do

@@ -1,7 +1,6 @@
 .main {
-    float: left;
     margin: 10px;
-    height: 70vh;
+    height: 100vh;
 }
 
 .editor {
@@ -10,20 +9,22 @@
     background: transparent;
 }
 
-.outputBox {
-    height: 15vh;
-    overflow-y: auto;
-    resize: vertical;
-    unicode-bidi: embed;
-    font-family: monospace;
-    white-space: pre;
+.flex-container {
+    display: flex;
+    flex-direction: row;
+}
+
+.vertical-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 20vw;
+    min-width: 20vw;
 }
 
 pre::-webkit-scrollbar {
     display: none;
 }
 
-html,
 body {
     background: #000;
     margin: 0px;

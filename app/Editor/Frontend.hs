@@ -19,12 +19,13 @@ module Editor.Frontend where
 -}
 
 import Control.Monad (void)
+import Editor.UI
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core as C hiding (text)
 import System.Environment (getExecutablePath)
 import System.FilePath (dropFileName)
 
-frontend :: Window -> UI Element
+frontend :: Window -> UI ()
 frontend win = do
   void $ return win # set title "cadavre-logicielle"
 
@@ -41,19 +42,15 @@ frontend win = do
 
   container <-
     UI.div
-      # set UI.id_ "container"
-      #. "flex-container CodeMirror cm-s-tomorrow-night-eighties"
+      #@ "container"
+      #. "flex-container cm-s-tomorrow-night-eighties"
 
   body <- UI.getBody win # set UI.style [("background-color", "black")]
 
   void $
     element body
-      #+ [ element container
-             #+ [ element editor,
-                  outputWrapper
-                ]
+      #+ [ element container #+ [UI.div #+ [definitionContainer, messageContainer] #. "vertical-container", element editor]
          ]
-  return editor
 
 tidalSettings :: UI Element
 tidalSettings = do
@@ -61,18 +58,18 @@ tidalSettings = do
   tidalKeys <- liftIO $ readFile $ execPath ++ "static/tidalConfig.js"
   mkElement "script" # set UI.text tidalKeys
 
-outputWrapper :: UI Element
-outputWrapper =
-  UI.div
-    #+ [ UI.pre
-           # set UI.id_ "output"
-           #. "outputBox"
-           # set style [("font-size", "3vh")]
-       ]
-
 fileInput :: UI Element
 fileInput =
   UI.input
-    # set UI.id_ "fileInput"
+    #@ "fileInput"
     # set UI.type_ "file"
     # set style [("display", "none")]
+
+messageContainer :: UI Element
+messageContainer = UI.div #. "message-container vertical-container" #@ "message-container"
+
+playerContainer :: UI Element
+playerContainer = UI.div #. "player-container" #@ "player-container"
+
+definitionContainer :: UI Element
+definitionContainer = UI.div #. "definition-container" #@ "definition-container"

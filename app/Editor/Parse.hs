@@ -11,6 +11,8 @@ data Command
   | Statement String
   | Definition String String String
   | Ping
+  | NoCommand
+  | RemoteAddress String Int
   deriving (Show)
 
 data Block = Block
@@ -36,7 +38,7 @@ parseType = do
   return (Type s)
 
 parseDefType :: Parser String
-parseDefType = string "Int" <|> string "Double" <|> string "Bool" <|> string "VM"
+parseDefType = string "Int" <|> string "Double" <|> string "Bool" <|> string "VM" <|> string "String" <|> string "Time" <|> string "Note"
 
 parseDef :: Parser Command
 parseDef = do
@@ -57,11 +59,21 @@ parsePing = do
   _ <- string ":ping"
   return Ping
 
+parseRemoteAddress :: Parser Command
+parseRemoteAddress = do
+  whitespace
+  _ <- string ":remote"
+  whitespace
+  add <- many (digit <|> char '.')
+  _ <- string ":"
+  d <- many digit
+  return $ RemoteAddress add (read d)
+
 parseStatement :: Parser Command
 parseStatement = Statement <$> many1 anyChar
 
 parseCommand :: Parser Command
-parseCommand = try parseDef <|> try parseType <|> try parsePing <|> parseStatement
+parseCommand = try parseDef <|> try parseType <|> try parsePing <|> try parseRemoteAddress <|> parseStatement <|> return NoCommand
 
 -- parsing blocks
 

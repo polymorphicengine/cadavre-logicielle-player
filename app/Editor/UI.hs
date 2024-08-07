@@ -23,24 +23,11 @@ module Editor.UI where
 -- (Stream, sPMapMV, Pattern, queryArc, Arc(..))
 
 import Control.Concurrent (threadDelay)
+import Control.Monad (void)
+import Data.Time
 import Foreign.JavaScript (JSObject)
+import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core as C hiding (get, text, value)
-
-getOutputEl :: UI Element
-getOutputEl = do
-  win <- askWindow
-  elMay <- getElementById win "output"
-  case elMay of
-    Nothing -> error "can't happen"
-    Just el -> return el
-
-getDisplayElV :: UI Element
-getDisplayElV = do
-  win <- askWindow
-  elMay <- getElementById win "displayV"
-  case elMay of
-    Nothing -> error "can't happen"
-    Just el -> return el
 
 getCursorLine :: (ToJS a) => a -> UI Int
 getCursorLine cm = callFunction $ ffi (wrapCatchErr "getCursorLine(%1)") cm
@@ -99,3 +86,29 @@ clearConfig win = runUI win $ runFunction $ ffi "window.electronAPI.clearStore()
 
 wrapCatchErr :: String -> String
 wrapCatchErr st = "try {" ++ st ++ "} catch (err) {}"
+
+mkMessage :: String -> String -> UI Element
+mkMessage t m = UI.div #+ [UI.span # set UI.text t, UI.pre # set UI.text m] #. "message"
+
+addElement :: String -> String -> Element -> UI ()
+addElement className containerId el = do
+  win <- askWindow
+  els <- getElementsByClassName win className
+  mayContainer <- getElementById win containerId
+  case mayContainer of
+    Nothing -> return ()
+    Just cont -> void $ element cont # set UI.children (el : els)
+
+addMessage :: String -> UI ()
+addMessage m = do
+  t <- liftIO getZonedTime
+  el <- mkMessage (show t) m
+  addElement "message" "message-container" el
+
+infixl 8 #@
+
+(#@) :: UI Element -> String -> UI Element
+(#@) mx s = mx # set (attr "id") s
+
+getCodeMirror :: UI JSObject
+getCodeMirror = callFunction $ ffi "document.querySelector(\"#editor + .CodeMirror\").CodeMirror"

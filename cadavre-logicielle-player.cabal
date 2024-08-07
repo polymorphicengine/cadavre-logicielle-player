@@ -33,7 +33,9 @@ executable cl-player
                       optparse-applicative,
                       network,
                       hosc,
-                      parsec
+                      parsec,
+                      time,
+                      mtl
     hs-source-dirs:   app
     default-language: Haskell2010
     ghc-options: -threaded
