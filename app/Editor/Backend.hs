@@ -117,23 +117,20 @@ checkTimeout x = liftIO getCurrentTime >>= timeout x
 
 timeout :: (Int, Int) -> UTCTime -> Game ()
 timeout x t = do
-    rMV <- gets sRange
-    success <- liftIO $ tryPutMVar rMV x
-    unless
-        success
-        ( do
-            cur <- liftIO getCurrentTime
-            ( if diffUTCTime cur t >= 10
-                then do
-                cm <- liftUI getCodeMirror
-                liftUI $ uncurry (flashError cm) x
-                liftUI $ addMessage "No response from table.."
-                void $ liftIO $ takeMVar rMV
-                else timeout x t
-            )
-        )
-
-
+  rMV <- gets sRange
+  success <- liftIO $ tryPutMVar rMV x
+  unless
+    success
+    ( do
+        cur <- liftIO getCurrentTime
+        if diffUTCTime cur t >= 10
+          then do
+            cm <- liftUI getCodeMirror
+            liftUI $ uncurry (flashError cm) x
+            liftUI $ addMessage "No response from table.."
+            void $ liftIO $ takeMVar rMV
+          else timeout x t
+    )
 
 --------------------------------------------------------
 --------- acting on responses from the table -----------
@@ -148,28 +145,27 @@ playingHand = do
 
 act :: Maybe O.Message -> Game ()
 act (Just (Message "/ok" [])) = successAction
-act (Just (Message "/ok" [AsciiString x])) = successAction >> liftUI $ addMessage (ascii_to_string x)
-act (Just (Message "/error" [AsciiString e])) = errorAction >> liftUI $ addMessage (ascii_to_string e)
+act (Just (Message "/ok" [AsciiString x])) = successAction >> liftUI (addMessage (ascii_to_string x))
+act (Just (Message "/error" [AsciiString e])) = errorAction >> liftUI (addMessage (ascii_to_string e))
 act (Just m) = liftUI $ addMessage ("Unhandeled message: " ++ show m)
 act Nothing = liftUI $ addMessage "Not a message?"
 
-
 successAction :: Game ()
 successAction = do
-    rMV <- gets sRange
-    may <- liftIO $ tryTakeMVar rMV
-    case may of
-       Nothing -> return ()
-       Just (st,end) -> do
-                cm <- liftUI getCodeMirror
-                liftUI $ flashSuccess cm st end
+  rMV <- gets sRange
+  may <- liftIO $ tryTakeMVar rMV
+  case may of
+    Nothing -> return ()
+    Just (st, end) -> do
+      cm <- liftUI getCodeMirror
+      liftUI $ flashSuccess cm st end
 
 errorAction :: Game ()
 errorAction = do
-    rMV <- gets sRange
-    may <- liftIO $ tryTakeMVar rMV
-    case may of
-       Nothing -> return ()
-       Just (st,end) -> do
-                cm <- liftUI getCodeMirror
-                liftUI $ flashError cm st end
+  rMV <- gets sRange
+  may <- liftIO $ tryTakeMVar rMV
+  case may of
+    Nothing -> return ()
+    Just (st, end) -> do
+      cm <- liftUI getCodeMirror
+      liftUI $ flashError cm st end
