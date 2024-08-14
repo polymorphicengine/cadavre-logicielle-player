@@ -41,10 +41,8 @@ setup win = void $ do
 setupBackend :: UI ()
 setupBackend = do
   win <- askWindow
-  local <- liftIO $ udpServer "127.0.0.1" 2324
-  addr <- liftIO $ N.getAddrInfo Nothing (Just "127.0.0.1") Nothing
-  let (N.SockAddrInet _ a) = N.addrAddress (head addr)
-      remote = N.SockAddrInet 2323 a
+  local <- liftIO $ udp_server 2324
+  remote <- defaultTableAddress
 
   rMV <- liftIO newEmptyMVar
   remMV <- liftIO $ newMVar remote
@@ -63,3 +61,11 @@ addFileInputAndSettings = do
       #+ [ fileInput,
            tidalSettings
          ]
+
+
+defaultTableAddress :: UI TableAddress
+defaultTableAddress = do
+    addr <- liftIO $ N.getAddrInfo Nothing (Just "127.0.0.1") Nothing
+    let (N.SockAddrInet _ a) = N.addrAddress (head addr)
+
+    return $ N.SockAddrInet 2323 a
