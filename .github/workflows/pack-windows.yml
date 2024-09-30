@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         ghc: ['latest']
-        cabal: ['3.6.2.0']
+        cabal: ['latest']
         
     steps:
     - name: Check out code
