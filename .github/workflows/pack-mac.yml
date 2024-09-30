@@ -70,4 +70,4 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v1
       with:
-          files: out/make/zip/darwin/x64/*.zip
+          files: out/make/zip/darwin/*/*.zip
