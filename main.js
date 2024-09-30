@@ -23,7 +23,7 @@ function handleClearStore(event) {
 }
 
 const relBin =
-  "./dist-newstyle/build/x86_64-linux/ghc-9.4.8/cadavre-logicielle-player-0.1.0.0/x/cl-player/build/cl-player/cl-player";
+  "binary/cl-player";
 
 // Assign a random port to run on.
 freeport((err, port) => {
