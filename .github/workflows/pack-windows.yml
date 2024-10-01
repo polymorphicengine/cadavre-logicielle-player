@@ -44,7 +44,9 @@ jobs:
     
     - name: cabal build
       run: cabal v2-build --enable-tests
-      
+
+    - name: create dir
+      run: New-Item -Path 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\binary' -type directory
    
     - name: move executable
       run: Copy-Item -Path 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\dist-newstyle\build\x86_64-windows\ghc-${{ matrix.ghc }}\cadavre-logicielle-player-0.1.0.0\x\cl-player\build\cl-player\cl-player.exe' -Recurse -Destination 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\binary\cl-player.exe'
