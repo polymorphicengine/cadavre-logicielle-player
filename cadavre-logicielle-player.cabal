@@ -40,6 +40,3 @@ executable cl-player
     default-language: Haskell2010
     ghc-options: -threaded
                  -Wall
-    ld-options: -Wl,-rpath -Wl,$ORIGIN/c-libs
-    if os(darwin)
-       ld-options: -mmacosx-version-min=10.9
