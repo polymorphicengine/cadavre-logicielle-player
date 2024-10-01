@@ -1,11 +1,11 @@
 {
-  "name": "cadavre-logicielle-player",
+  "name": "cadavre logicielle",
   "version": "0.0.1",
-  "description": "live- coding parlour game",
+  "description": "live-coding parlour game",
   "main": "main.js",
   "scripts": {
     "start": "electron-forge start",
-    "pack-app": "electron-packager . cl-player --overwrite  --prune=true --ignore=\\.github --ignore=\\.stack-work --ignore=\\.gitignore --ignore=\\dist-newstyle",
+    "pack-app": "electron-packager . cl-player --overwrite  --asar --prune=true --ignore=\\.github --ignore=\\.stack-work --ignore=\\.gitignore --ignore=\\dist-newstyle",
     "postpack-app:darwin": "node ./postpack-app-darwin.js",
     "postpack-app:win32": "node ./postpack-app-win.js",
     "package": "electron-forge package",
