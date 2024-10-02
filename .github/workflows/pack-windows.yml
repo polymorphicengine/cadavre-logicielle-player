@@ -67,9 +67,7 @@ jobs:
             npm run make
 
     - name: list files
-      run: |
-            cd out\make
-            DIR /s
+      run: Get-ChildItem -Path "D:\a\cadavre-logicielle-player\cadavre-logicielle-player\out\make" -Recurse
       
     - name: Release
       uses: softprops/action-gh-release@v1
