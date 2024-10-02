@@ -65,6 +65,11 @@ jobs:
             npm install --save-dev @electron-forge/cli
             npx electron-forge import
             npm run make
+
+    - name: list files
+      run: |
+            cd out\make
+            DIR /s
       
     - name: Release
       uses: softprops/action-gh-release@v1
