@@ -22,8 +22,7 @@ function handleClearStore(event) {
   store.clear();
 }
 
-const relBin =
-  "binary/cl-player";
+const relBin = "build/cl-player";
 
 // Assign a random port to run on.
 freeport((err, port) => {

@@ -2,6 +2,7 @@ dist
 dist-*
 cabal-dev
 node_modules
+build
 *.o
 *.hi
 *.hie

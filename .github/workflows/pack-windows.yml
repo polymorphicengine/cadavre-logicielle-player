@@ -7,66 +7,63 @@ on:
 
 jobs:
   build:
-
     runs-on: windows-latest
     strategy:
       matrix:
-        ghc: ['9.6.4']
-        cabal: ['3.10.1.0']
-        
-    steps:
-    - name: Check out code
-      uses: actions/checkout@v2
+        ghc: ["9.6.4"]
+        cabal: ["3.10.1.0"]
 
-    - name: Setup Haskell
-      uses: haskell-actions/setup@v2
-      id: setup-haskell-cabal
-      with:
-        ghc-version: ${{ matrix.ghc }}
-        cabal-version: ${{ matrix.cabal }}
-        
-    - name: Freeze
-      run: |
-        cabal freeze
-    - name: Cache cabal
-      uses: actions/cache@v2
-      id: cache-cabal
-      with:
-        path: 'C:\sr'
-        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('D:\a\cadavre-logicielle-player\cadavre-logicielle-player\app\') }}-a
-        
-    - name: Cache dist
-      uses: actions/cache@v2
-      id: cache-bin
-      with:
-        path: 'D:\a\tidal-gui\tidal-gui\dist-newstyle\'
-        key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('D:\a\cadavre-logicielle-player\cadavre-logicielle-player\app\') }}-b
-    
-    - name: cabal build
-      run: cabal v2-build --enable-tests
-      
-   
-    - name: move executable
-      run: Copy-Item -Path 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\dist-newstyle\build\x86_64-windows\ghc-${{ matrix.ghc }}\cadavre-logicielle-player-0.1.0.0\x\cl-player\build\cl-player\cl-player.exe' -Recurse -Destination 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\binary\cl-player.exe'
-    
-    - name: move static
-      run: Copy-Item -Path 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\static\' -Recurse -Destination 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\binary\static'
- 
-   
-    - name: setup node
-      uses: actions/setup-node@v3
-      with:
-         node-version: 16
-    
-    - name: electron forge
-      run: |
-            npm install --save-dev @electron-forge/cli
-            npx electron-forge import
-            npm run make
-      
-    - name: Release
-      uses: softprops/action-gh-release@v1
-      with:
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Setup Haskell
+        uses: haskell-actions/setup@v2
+        id: setup-haskell-cabal
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: ${{ matrix.cabal }}
+
+      - name: Freeze
+        run: |
+          cabal freeze
+      - name: Cache cabal
+        uses: actions/cache@v2
+        id: cache-cabal
+        with:
+          path: 'C:\sr'
+          key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('D:\a\cadavre-logicielle-player\cadavre-logicielle-player\app\') }}-a
+
+      - name: Cache dist
+        uses: actions/cache@v2
+        id: cache-bin
+        with:
+          path: 'D:\a\tidal-gui\tidal-gui\dist-newstyle\'
+          key: ${{ runner.os }}-${{ matrix.ghc }}-${{ hashFiles('D:\a\cadavre-logicielle-player\cadavre-logicielle-player\app\') }}-b
+
+      - name: cabal build
+        run: cabal v2-build --enable-tests
+
+      - name: move executable
+        run: Copy-Item -Path 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\dist-newstyle\build\x86_64-windows\ghc-${{ matrix.ghc }}\cadavre-logicielle-player-0.1.0.0\x\cl-player\build\cl-player\cl-player.exe' -Recurse -Destination 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\build\cl-player.exe'
+
+      - name: move static
+        run: Copy-Item -Path 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\static\' -Recurse -Destination 'D:\a\cadavre-logicielle-player\cadavre-logicielle-player\build\static'
+
+      - name: setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: electron forge
+        run: |
+          npm install --save-dev @electron-forge/cli
+          npx electron-forge import
+          npm run make
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
           files: |
-                  out\make\squirrel.windows\x64\*.exe
-                  out\make\squirrel.windows\x64\*.nupkg
+            out\make\squirrel.windows\x64\*.exe
+            out\make\squirrel.windows\x64\*.nupkg
