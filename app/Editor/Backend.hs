@@ -81,7 +81,10 @@ parseBlocks mode cm = do
     Just b -> do
       case runParser (bContent b) of
         Left err -> liftUI (addMessage $ show err) >> return NoCommand
-        Right c -> checkTimeout (bStart b, bEnd b) >> return c
+        Right c -> do
+          rMV <- gets sRange
+          liftIO $ tryPutMVar rMV (bStart b, bEnd b)
+          return c
 
 sendMessageRemote :: Packet -> Game ()
 sendMessageRemote p = do
@@ -95,6 +98,8 @@ actOnCommand (Type str) = sendMessageRemote (O.p_message "/type" [O.string str])
 actOnCommand Ping = sendMessageRemote (O.p_message "/ping" [])
 actOnCommand (Definition n t c) = defAction n t c
 actOnCommand NoCommand = liftUI $ addMessage "Could not parse."
+actOnCommand (Sit x) = sendMessageRemote (O.p_message "/sit" [O.string x])
+actOnCommand (Say x) = sendMessageRemote (O.p_message "/say" [O.string x])
 actOnCommand (RemoteAddress add p) = newRemoteAddress add p
 
 defAction :: String -> String -> String -> Game ()
@@ -112,26 +117,6 @@ newRemoteAddress addr port = do
   liftIO $ modifyMVar_ rMV (const $ return remote)
   liftUI $ addMessage $ "Changed address of the table to " ++ addr ++ ":" ++ show port
   successAction
-
-checkTimeout :: (Int, Int) -> Game ()
-checkTimeout x = liftIO getCurrentTime >>= timeout x
-
-timeout :: (Int, Int) -> UTCTime -> Game ()
-timeout x t = do
-  rMV <- gets sRange
-  success <- liftIO $ tryPutMVar rMV x
-  unless
-    success
-    ( do
-        cur <- liftIO getCurrentTime
-        if diffUTCTime cur t >= 10
-          then do
-            cm <- liftUI getCodeMirror
-            liftUI $ uncurry (flashError cm) x
-            liftUI $ addMessage "No response from table.."
-            void $ liftIO $ takeMVar rMV
-          else timeout x t
-    )
 
 --------------------------------------------------------
 --------- acting on responses from the table -----------

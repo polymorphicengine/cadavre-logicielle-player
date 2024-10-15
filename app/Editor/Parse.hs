@@ -12,6 +12,8 @@ data Command
   | Definition String String String
   | Ping
   | NoCommand
+  | Sit String
+  | Say String
   | RemoteAddress String Int
   deriving (Show)
 
@@ -59,6 +61,20 @@ parsePing = do
   _ <- string ":ping"
   return Ping
 
+parseSit :: Parser Command
+parseSit = do
+  whitespace
+  _ <- string ":sit"
+  s <- many anyChar
+  return (Sit s)
+
+parseSay :: Parser Command
+parseSay = do
+  whitespace
+  _ <- string ":say"
+  s <- many anyChar
+  return (Say s)
+
 parseRemoteAddress :: Parser Command
 parseRemoteAddress = do
   whitespace
@@ -73,7 +89,7 @@ parseStatement :: Parser Command
 parseStatement = Statement <$> many1 anyChar
 
 parseCommand :: Parser Command
-parseCommand = try parseDef <|> try parseType <|> try parsePing <|> try parseRemoteAddress <|> parseStatement <|> return NoCommand
+parseCommand = try parseDef <|> try parseType <|> try parsePing <|> try parseSit <|> try parseSay <|> try parseRemoteAddress <|> parseStatement <|> return NoCommand
 
 -- parsing blocks
 

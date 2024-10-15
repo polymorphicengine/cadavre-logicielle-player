@@ -102,7 +102,7 @@ addElement className containerId el = do
 addMessage :: String -> UI ()
 addMessage m = do
   t <- liftIO getZonedTime
-  el <- mkMessage (show t) m
+  el <- mkMessage (showTime t) m
   addElement "message" "message-container" el
 
 infixl 8 #@
@@ -112,3 +112,6 @@ infixl 8 #@
 
 getCodeMirror :: UI JSObject
 getCodeMirror = callFunction $ ffi "document.querySelector(\"#editor + .CodeMirror\").CodeMirror"
+
+showTime :: ZonedTime -> String
+showTime = take 8 . show . localTimeOfDay . zonedTimeToLocalTime
