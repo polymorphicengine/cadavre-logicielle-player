@@ -33,7 +33,7 @@ main = do
   startGUI
     C.defaultConfig
       { jsStatic = Just $ execPath ++ "static",
-        jsCustomHTML = Just "tidal.html",
+        jsCustomHTML = Just "cadavre-logicielle.html",
         jsPort = Just (tpPort config)
       }
     setup

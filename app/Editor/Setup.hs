@@ -59,13 +59,12 @@ addFileInputAndSettings = do
   void $
     element body
       #+ [ fileInput,
-           tidalSettings
+           settings
          ]
-
 
 defaultTableAddress :: UI TableAddress
 defaultTableAddress = do
-    addr <- liftIO $ N.getAddrInfo Nothing (Just "127.0.0.1") Nothing
-    let (N.SockAddrInet _ a) = N.addrAddress (head addr)
+  addr <- liftIO $ N.getAddrInfo Nothing (Just "127.0.0.1") Nothing
+  let (N.SockAddrInet _ a) = N.addrAddress (head addr)
 
-    return $ N.SockAddrInet 2323 a
+  return $ N.SockAddrInet 2323 a

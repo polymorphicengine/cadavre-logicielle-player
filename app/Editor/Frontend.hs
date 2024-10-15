@@ -29,7 +29,7 @@ frontend :: Window -> UI ()
 frontend win = do
   void $ return win # set title "cadavre-logicielle"
 
-  UI.addStyleSheet win "tidal.css"
+  UI.addStyleSheet win "cadavre-logicielle.css"
   UI.addStyleSheet win "theme.css"
 
   setCallBufferMode NoBuffering
@@ -52,11 +52,11 @@ frontend win = do
       #+ [ element container #+ [UI.div #+ [definitionContainer, messageContainer] #. "vertical-container", element editor]
          ]
 
-tidalSettings :: UI Element
-tidalSettings = do
+settings :: UI Element
+settings = do
   execPath <- liftIO $ dropFileName <$> getExecutablePath
-  tidalKeys <- liftIO $ readFile $ execPath ++ "static/tidalConfig.js"
-  mkElement "script" # set UI.text tidalKeys
+  keys <- liftIO $ readFile $ execPath ++ "static/config.js"
+  mkElement "script" # set UI.text keys
 
 fileInput :: UI Element
 fileInput =
