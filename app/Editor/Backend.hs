@@ -29,6 +29,7 @@ import Data.Time (UTCTime, diffUTCTime, getCurrentTime)
 import Editor.Parse
 import Editor.UI
 import Foreign.JavaScript (JSObject)
+import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core as C hiding (get, text)
 import qualified Network.Socket as N
 import Sound.Osc.Fd as O
@@ -47,6 +48,10 @@ data Definition
   { dName :: String,
     dType :: String
   }
+  deriving (Eq)
+
+instance Show Definition where
+  show (Def name typ) = name ++ " :: " ++ typ
 
 type Definitions = [Definition]
 
@@ -54,6 +59,7 @@ data State
   = State
   { sLocal :: Udp,
     sRemote :: MVar TableAddress,
+    sDefs :: Definitions,
     sRange :: Range
   }
 
@@ -83,7 +89,7 @@ parseBlocks mode cm = do
         Left err -> liftUI (addMessage $ show err) >> return NoCommand
         Right c -> do
           rMV <- gets sRange
-          liftIO $ tryPutMVar rMV (bStart b, bEnd b)
+          _ <- liftIO $ tryPutMVar rMV (bStart b, bEnd b)
           return c
 
 sendMessageRemote :: Packet -> Game ()
@@ -133,6 +139,10 @@ act :: Maybe O.Message -> Game ()
 act (Just (Message "/ok" [])) = successAction
 act (Just (Message "/ok" [AsciiString x])) = successAction >> liftUI (addMessage (ascii_to_string x))
 act (Just (Message "/error" [AsciiString e])) = errorAction >> liftUI (addMessage (ascii_to_string e))
+act (Just (Message "/joined" [AsciiString name])) = joinedAction (ascii_to_string name)
+act (Just (Message "/define" [AsciiString name, AsciiString defName, AsciiString typ])) = addDefinition (ascii_to_string name) (Def (ascii_to_string defName) (ascii_to_string typ))
+act (Just (Message "/change" [AsciiString name, AsciiString defName])) = changeAction (ascii_to_string name) (ascii_to_string defName)
+act (Just (Message "/message" [AsciiString msg])) = messageAction (ascii_to_string msg)
 act (Just m) = liftUI $ addMessage ("Unhandeled message: " ++ show m)
 act Nothing = liftUI $ addMessage "Not a message?"
 
@@ -155,3 +165,25 @@ errorAction = do
     Just (st, end) -> do
       cm <- liftUI getCodeMirror
       liftUI $ flashError cm st end
+
+mkDefinition :: Definition -> UI Element
+mkDefinition d = UI.p #. "definition" #@ defID d # set UI.text (show d)
+
+defID :: Definition -> String
+defID d = "def-" ++ dName d
+
+addDefinition :: String -> Definition -> Game ()
+addDefinition name d = do
+  el <- liftUI $ mkDefinition d
+  liftUI $ addMessage (name ++ " folded the document and revealed " ++ show d)
+  liftUI $ addElement "definition" "definition-container" el
+  modify $ \st -> st {sDefs = d : sDefs st}
+
+joinedAction :: String -> Game ()
+joinedAction name = liftUI $ addMessage (name ++ " joined the game!")
+
+changeAction :: String -> String -> Game ()
+changeAction name def = liftUI $ addMessage (name ++ " changed the definition of " ++ def ++ ".")
+
+messageAction :: String -> Game ()
+messageAction msg = liftUI $ addMessage msg

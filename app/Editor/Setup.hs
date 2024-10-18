@@ -46,7 +46,7 @@ setupBackend = do
 
   rMV <- liftIO newEmptyMVar
   remMV <- liftIO $ newMVar remote
-  let st = State local remMV rMV
+  let st = State local remMV [] rMV
   _ <- liftIO $ forkIO $ runUI win $ void $ runGame playingHand st
 
   createHaskellFunction "evalBlockAtCursor" (\cm -> runUI win $ void $ runGame (evalContentAtCursor EvalBlock cm) st)

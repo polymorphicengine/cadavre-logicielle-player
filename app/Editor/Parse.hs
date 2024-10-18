@@ -65,13 +65,15 @@ parseSit :: Parser Command
 parseSit = do
   whitespace
   _ <- string ":sit"
-  s <- many anyChar
+  whitespace
+  s <- many1 (letter <|> digit <|> char '_' <|> char '-')
   return (Sit s)
 
 parseSay :: Parser Command
 parseSay = do
   whitespace
   _ <- string ":say"
+  whitespace
   s <- many anyChar
   return (Say s)
 
