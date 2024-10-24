@@ -66,7 +66,7 @@ fileInput =
     # set style [("display", "none")]
 
 messageContainer :: UI Element
-messageContainer = UI.div #. "message-container vertical-container" #@ "message-container"
+messageContainer = UI.div #. "message-container" #@ "message-container"
 
 playerContainer :: UI Element
 playerContainer = UI.div #. "player-container" #@ "player-container"

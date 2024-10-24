@@ -167,7 +167,7 @@ errorAction = do
       liftUI $ flashError cm st end
 
 mkDefinition :: Definition -> UI Element
-mkDefinition d = UI.p #. "definition" #@ defID d # set UI.text (show d)
+mkDefinition d = UI.p #. "definition" #@ defID d # set UI.text (show d) # set (attr "onclick") "func()"
 
 defID :: Definition -> String
 defID d = "def-" ++ dName d
