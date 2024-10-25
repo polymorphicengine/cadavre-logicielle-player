@@ -1,22 +1,3 @@
-function hideAll() {
-  var elems = document.getElementsByTagName("span");
-  var ed = document.getElementById("editors");
-
-  for (var i = 0; i < elems.length; i++) {
-    if (elems[i].style.visibility === "hidden") {
-      elems[i].style.visibility = "visible";
-    } else {
-      elems[i].style.visibility = "hidden";
-    }
-  }
-
-  if (ed.style.visibility === "hidden") {
-    ed.style.visibility = "visible";
-  } else {
-    ed.style.visibility = "hidden";
-  }
-}
-
 function loadFile(cm) {
   document.getElementById("fileInput").onchange = (e) => {
     var file = e.target.files[0];
@@ -52,19 +33,6 @@ function saveFile(cm) {
   downloadLink.click();
 }
 
-function evalB(cm) {
-  if (typeof cm === "undefined" || cm == null) {
-    console.log("undef");
-  } else {
-    //console.log(cm);
-    try {
-      return evalBlockAtCursor(cm);
-    } catch (err) {
-      console.log("oh dear");
-    }
-  }
-}
-
 function getCursorLine(cm) {
   let obj = cm.getCursor();
   if (typeof obj === "undefined" || obj == null) {
@@ -75,14 +43,6 @@ function getCursorLine(cm) {
     } catch (err) {
       console.log("oh dear");
     }
-  }
-}
-
-function getV(cm) {
-  if (typeof cm === "undefined" || cm == null) {
-    console.log("WTF");
-  } else {
-    return cm.getValue();
   }
 }
 
@@ -222,8 +182,8 @@ Haskell.initFFI = function () {
           eval(msg.contents);
           reply();
         } catch (err) {
-          connection.close();
-          throw err;
+          //connection.close();
+          //throw err;
           Haskell.log("Error: %o", err.toString());
         }
         break;

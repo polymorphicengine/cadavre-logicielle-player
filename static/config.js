@@ -8,7 +8,6 @@ const commands = {
   swapLineUp: swapLineUp,
   swapLineDown: swapLineDown,
   duplicateLine: duplicateLine,
-  hideAll: hideAll,
 };
 
 CodeMirror.commands = Object.assign(CodeMirror.commands, commands);

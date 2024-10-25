@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module Editor.UI where
@@ -23,17 +24,19 @@ module Editor.UI where
 -- (Stream, sPMapMV, Pattern, queryArc, Arc(..))
 
 import Control.Concurrent (threadDelay)
+import Control.Exception (SomeException)
 import Control.Monad (void)
+import Control.Monad.Catch (catch)
 import Data.Time
 import Foreign.JavaScript (JSObject)
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core as C hiding (get, text, value)
 
 getCursorLine :: (ToJS a) => a -> UI Int
-getCursorLine cm = callFunction $ ffi (wrapCatchErr "getCursorLine(%1)") cm
+getCursorLine cm = catchHaskellError 0 $ callFunction $ ffi "getCursorLine(%1)" cm
 
 getValue :: (ToJS a) => a -> UI String
-getValue cm = callFunction $ ffi "getV(%1)" cm
+getValue cm = catchHaskellError "" $ callFunction $ ffi "%1.getValue()" cm
 
 createHaskellFunction name fn = do
   handler <- ffiExport fn
@@ -41,40 +44,36 @@ createHaskellFunction name fn = do
 
 -- adding and removing editors
 
-catchJSErrors :: UI ()
-catchJSErrors = runFunction $ ffi "window.onerror = function(msg, url, linenumber) { alert(msg);return true;}"
-
 makeEditor :: String -> UI ()
 makeEditor i = runFunction $ ffi $ i ++ "cm = CodeMirror.fromTextArea(document.getElementById('" ++ i ++ "'), fullSettings.editor);"
 
 -- flashing
 
-checkUndefined :: (ToJS a) => a -> UI String
-checkUndefined cm = callFunction $ ffi "(function (a) { if (typeof a === 'undefined' || a === null) {return \"yes\";} else { return \"no\"; } })(%1)" cm
-
-highlightBlock :: JSObject -> Int -> Int -> String -> UI JSObject
-highlightBlock cm lineStart lineEnd color = do
-  undef <- checkUndefined cm
-  case undef of
-    "no" -> callFunction $ ffi "((%1).markText({line: %2, ch: 0}, {line: %3, ch: 0}, {css: %4}))" cm lineStart lineEnd color
-    _ -> callFunction $ ffi "return {}"
+highlightBlock :: JSObject -> Int -> Int -> String -> UI (Maybe JSObject)
+highlightBlock cm lineStart lineEnd color = catchHaskellErrorMaybe $ callFunction $ ffi "((%1).markText({line: %2, ch: 0}, {line: %3, ch: 0}, {css: %4}))" cm lineStart lineEnd color
 
 unHighlight :: JSObject -> UI ()
 unHighlight mark = runFunction $ ffi "if (typeof %1 !== 'undefined'){%1.clear()};" mark
 
 flashSuccess :: JSObject -> Int -> Int -> UI ()
 flashSuccess cm lineStart lineEnd = do
-  mark <- highlightBlock cm lineStart (lineEnd + 1) "background-color: green"
-  liftIO $ threadDelay 100000
-  unHighlight mark
-  flushCallBuffer
+  maymark <- highlightBlock cm lineStart (lineEnd + 1) "background-color: green"
+  case maymark of
+    Just mark -> do
+      liftIO $ threadDelay 100000
+      unHighlight mark
+      flushCallBuffer
+    Nothing -> return ()
 
 flashError :: JSObject -> Int -> Int -> UI ()
 flashError cm lineStart lineEnd = do
-  mark <- highlightBlock cm lineStart (lineEnd + 1) "background-color: red"
-  liftIO $ threadDelay 100000
-  unHighlight mark
-  flushCallBuffer
+  maymark <- highlightBlock cm lineStart (lineEnd + 1) "background-color: red"
+  case maymark of
+    Just mark -> do
+      liftIO $ threadDelay 100000
+      unHighlight mark
+      flushCallBuffer
+    Nothing -> return ()
 
 -- setting, getting and clearing the config
 
@@ -83,9 +82,6 @@ setConfig win key v = runUI win $ runFunction $ ffi ("window.electronAPI.putInSt
 
 clearConfig :: Window -> IO ()
 clearConfig win = runUI win $ runFunction $ ffi "window.electronAPI.clearStore()"
-
-wrapCatchErr :: String -> String
-wrapCatchErr st = "try {" ++ st ++ "} catch (err) {}"
 
 mkMessage :: String -> String -> UI Element
 mkMessage t m = UI.pre # set UI.text (t ++ " - " ++ m) #. "message"
@@ -110,8 +106,15 @@ infixl 8 #@
 (#@) :: UI Element -> String -> UI Element
 (#@) mx s = mx # set (attr "id") s
 
-getCodeMirror :: UI JSObject
-getCodeMirror = callFunction $ ffi "document.querySelector(\"#editor + .CodeMirror\").CodeMirror"
+getCodeMirror :: UI (Maybe JSObject)
+getCodeMirror = catchHaskellErrorMaybe $ callFunction $ ffi "document.querySelector(\"#editor + .CodeMirror\").CodeMirror"
 
 showTime :: ZonedTime -> String
 showTime = take 8 . show . localTimeOfDay . zonedTimeToLocalTime
+
+-- to catch javascript errors when using callFunction
+catchHaskellError :: a -> UI a -> UI a
+catchHaskellError x action = catch action (\(e :: SomeException) -> addMessage (show e) >> return x)
+
+catchHaskellErrorMaybe :: UI a -> UI (Maybe a)
+catchHaskellErrorMaybe action = catch (fmap Just action) (\(e :: SomeException) -> addMessage (show e) >> return Nothing)

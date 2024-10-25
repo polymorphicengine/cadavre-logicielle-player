@@ -153,8 +153,10 @@ successAction = do
   case may of
     Nothing -> return ()
     Just (st, end) -> do
-      cm <- liftUI getCodeMirror
-      liftUI $ flashSuccess cm st end
+      maycm <- liftUI getCodeMirror
+      case maycm of
+        Just cm -> liftUI $ flashSuccess cm st end
+        Nothing -> return ()
 
 errorAction :: Game ()
 errorAction = do
@@ -163,11 +165,13 @@ errorAction = do
   case may of
     Nothing -> return ()
     Just (st, end) -> do
-      cm <- liftUI getCodeMirror
-      liftUI $ flashError cm st end
+      maycm <- liftUI getCodeMirror
+      case maycm of
+        Just cm -> liftUI $ flashError cm st end
+        Nothing -> return ()
 
 mkDefinition :: Definition -> UI Element
-mkDefinition d = UI.p #. "definition" #@ defID d # set UI.text (show d) # set (attr "onclick") "func()"
+mkDefinition d = UI.p #. "definition" #@ defID d # set UI.text (show d)
 
 defID :: Definition -> String
 defID d = "def-" ++ dName d
