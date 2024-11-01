@@ -1,6 +1,7 @@
 module Editor.Parse where
 
 import Control.Monad (void)
+import Data.List (intercalate)
 import Text.Parsec
 import Text.Parsec.String
 
@@ -72,10 +73,13 @@ parseSit = do
 parseSay :: Parser Command
 parseSay = do
   whitespace
-  _ <- string ":say"
-  whitespace
-  s <- many anyChar
-  return (Say s)
+  xs <- sepBy (many (try parser <|> pure <$> noneOf "-")) (string "--")
+  return (Say $ concat $ concat xs)
+  where
+    parser = do
+      x <- string "-"
+      c <- noneOf "-"
+      return $ x ++ [c]
 
 parseRemoteAddress :: Parser Command
 parseRemoteAddress = do
