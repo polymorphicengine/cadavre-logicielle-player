@@ -51,6 +51,7 @@ setupBackend = do
 
   createHaskellFunction "evalBlockAtCursor" (\cm -> runUI win $ void $ runGame (evalContentAtCursor EvalBlock cm) st)
   createHaskellFunction "evalLineAtCursor" (\cm -> runUI win $ void $ runGame (evalContentAtCursor EvalLine cm) st)
+  createHaskellFunction "connect" (runUI win $ void $ runGame connect st)
 
 addFileInputAndSettings :: UI ()
 addFileInputAndSettings = do

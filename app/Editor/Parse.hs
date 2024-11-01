@@ -141,3 +141,18 @@ getLineContent num ((n, s) : ls)
 -- replaceTabs "" = ""
 -- replaceTabs ('\t' : xs) = "    " ++ replaceTabs xs
 -- replaceTabs (x : xs) = x : replaceTabs xs
+
+isValidAddress :: String -> Bool
+isValidAddress x = case parse parseAddress "" x of
+  Left _ -> False
+  Right _ -> True
+
+parseAddress :: Parser ()
+parseAddress = do
+  count 3 digit
+  char '.'
+  count 3 digit
+  char '.'
+  digit
+  many1 digit
+  return ()

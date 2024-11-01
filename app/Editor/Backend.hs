@@ -124,6 +124,27 @@ newRemoteAddress addr port = do
   liftUI $ addMessage $ "Changed address of the table to " ++ addr ++ ":" ++ show port
   successAction
 
+connect :: Game ()
+connect = do
+  mayname <- liftUI getName
+  case mayname of
+    Nothing -> return ()
+    Just name -> do
+      mayorb <- liftUI getOrbit
+      case mayorb of
+        Nothing -> return ()
+        Just orb -> do
+          mayadd <- liftUI getAddress
+          case mayadd of
+            Nothing -> return ()
+            Just add -> do
+              mayport <- liftUI getPort
+              case mayport of
+                Nothing -> return ()
+                Just port -> do
+                  newRemoteAddress add port
+                  sendMessageRemote (O.p_message "/sit" [O.string name])
+
 --------------------------------------------------------
 --------- acting on responses from the table -----------
 --------------------------------------------------------

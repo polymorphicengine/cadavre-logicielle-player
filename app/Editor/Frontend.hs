@@ -34,23 +34,9 @@ frontend win = do
 
   setCallBufferMode NoBuffering
 
-  editor <-
-    UI.div
-      #. "main"
-      #+ [UI.textarea # set UI.id_ "editor"]
-      # set UI.style [("flex-grow", "8")]
+  body <- UI.getBody win
 
-  container <-
-    UI.div
-      #@ "container"
-      #. "flex-container cm-s-tomorrow-night-eighties"
-
-  body <- UI.getBody win # set UI.style [("background-color", "black")]
-
-  void $
-    element body
-      #+ [ element container #+ [UI.div #+ [definitionContainer, messageContainer] #. "vertical-container", element editor]
-         ]
+  void $ element body #+ [inputContainer, container]
 
 settings :: UI Element
 settings = do
@@ -65,11 +51,46 @@ fileInput =
     # set UI.type_ "file"
     # set style [("display", "none")]
 
+container :: UI Element
+container = UI.div #. "container" #+ [messageContainer, editor, rightContainer]
+
+editor :: UI Element
+editor = UI.div #. "main" #+ [UI.textarea # set UI.id_ "editor"]
+
 messageContainer :: UI Element
 messageContainer = UI.div #. "message-container" #@ "message-container"
+
+rightContainer :: UI Element
+rightContainer = UI.div #. "right-container" #+ [playerContainer, definitionContainer]
 
 playerContainer :: UI Element
 playerContainer = UI.div #. "player-container" #@ "player-container"
 
 definitionContainer :: UI Element
 definitionContainer = UI.div #. "definition-container" #@ "definition-container"
+
+inputContainer :: UI Element
+inputContainer = UI.div #. "input-container" #@ "input-container" #+ [playerInput, addressInput, connectButton]
+
+playerInput :: UI Element
+playerInput = UI.div #+ [nameInput, orbitInput] #. "player-input"
+
+nameInput :: UI Element
+nameInput = UI.div #+ [UI.label # set UI.text "name:" #. "label", input "name-input"] #. "input"
+
+orbitInput :: UI Element
+orbitInput = UI.div #+ [UI.label # set UI.text "orbit:" #. "label", input "orbit-input"] #. "input"
+
+addressInput :: UI Element
+addressInput =
+  UI.div
+    #+ [ UI.div #+ [UI.label # set UI.text "address:" #. "label", input "address-input"] #. "input",
+         UI.div #+ [UI.label # set UI.text "port:" #. "label", input "port-input"] #. "input"
+       ]
+    #. "address-input-container"
+
+connectButton :: UI Element
+connectButton = UI.button #. "button" #@ "connect-button" # set UI.text "connect" # set (attr "onclick") "connect()"
+
+input :: String -> UI Element
+input name = UI.div #. "inputarea" #@ name # set (attr "contenteditable") "true"

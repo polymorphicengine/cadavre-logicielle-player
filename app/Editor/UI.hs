@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module Editor.UI where
@@ -28,9 +29,11 @@ import Control.Exception (SomeException)
 import Control.Monad (void)
 import Control.Monad.Catch (catch)
 import Data.Time
+import Editor.Parse (isValidAddress)
 import Foreign.JavaScript (JSObject)
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core as C hiding (get, text, value)
+import Text.Read (readMaybe)
 
 getCursorLine :: (ToJS a) => a -> UI Int
 getCursorLine cm = catchHaskellError 0 $ callFunction $ ffi "getCursorLine(%1)" cm
@@ -118,3 +121,42 @@ catchHaskellError x action = catch action (\(e :: SomeException) -> addMessage (
 
 catchHaskellErrorMaybe :: UI a -> UI (Maybe a)
 catchHaskellErrorMaybe action = catch (fmap Just action) (\(e :: SomeException) -> addMessage (show e) >> return Nothing)
+
+getTextWithID :: String -> UI (Maybe String)
+getTextWithID idd = catchHaskellErrorMaybe $ callFunction $ ffi "document.getElementById(%1).innerText" idd
+
+getName :: UI (Maybe String)
+getName = do
+  mayname <- getTextWithID "name-input"
+  case mayname of
+    Nothing -> return Nothing
+    Just "" -> addMessage "please insert a name" >> return Nothing
+    x -> return x
+
+getOrbit :: UI (Maybe Int)
+getOrbit = do
+  mayorb <- getTextWithID "orbit-input"
+  case mayorb of
+    Nothing -> return Nothing
+    Just x -> do
+      case readMaybe x of
+        Nothing -> addMessage "please insert a valid orbit" >> return Nothing
+        Just orb -> return $ Just orb
+
+getAddress :: UI (Maybe String)
+getAddress = do
+  mayadd <- getTextWithID "address-input"
+  case mayadd of
+    Nothing -> return Nothing
+    Just add -> do
+      (if isValidAddress add || add == "localhost" then return $ Just add else addMessage "please insert a valid address" >> return Nothing)
+
+getPort :: UI (Maybe Int)
+getPort = do
+  mayport <- getTextWithID "port-input"
+  case mayport of
+    Nothing -> return Nothing
+    Just x -> do
+      case readMaybe x of
+        Nothing -> addMessage "please insert a valid port" >> return Nothing
+        Just port -> return $ Just port
