@@ -25,6 +25,8 @@ module Editor.Backend where
 import Control.Concurrent.MVar
 import Control.Monad (unless, void)
 import Control.Monad.State hiding (State)
+import Data.Text as T (pack, unpack)
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Data.Time (UTCTime, diffUTCTime, getCurrentTime)
 import Editor.Parse
 import Editor.UI
@@ -99,20 +101,26 @@ sendMessageRemote p = do
   liftIO $ O.sendTo (sLocal st) p remote
 
 actOnCommand :: Command -> Game ()
-actOnCommand (Statement str) = sendMessageRemote (O.p_message "/eval" [O.string str])
-actOnCommand (Type str) = sendMessageRemote (O.p_message "/type" [O.string str])
+actOnCommand (Statement str) = sendMessageRemote (O.p_message "/eval" [utf8String str])
+actOnCommand (Type str) = sendMessageRemote (O.p_message "/type" [utf8String str])
 actOnCommand Ping = sendMessageRemote (O.p_message "/ping" [])
 actOnCommand (Definition n t c) = defAction n t c
 actOnCommand NoCommand = liftUI $ addMessage "Could not parse."
-actOnCommand (Sit x) = sendMessageRemote (O.p_message "/sit" [O.string x])
-actOnCommand (Say x) = sendMessageRemote (O.p_message "/say" [O.string x])
+actOnCommand (Sit x) = sendMessageRemote (O.p_message "/sit" [utf8String x])
+actOnCommand (Say x) = sendMessageRemote (O.p_message "/say" [utf8String x])
 actOnCommand (RemoteAddress add p) = newRemoteAddress add p
 
 defAction :: String -> String -> String -> Game ()
-defAction name t c = sendMessageRemote (O.p_message "/define" [O.string name, O.string t, O.string code, O.string def])
+defAction name t c = sendMessageRemote (O.p_message "/define" [utf8String name, utf8String t, utf8String code, utf8String def])
   where
     def = "let " ++ name ++ " = _define" ++ t ++ "\"" ++ name ++ "\""
     code = "streamSet" ++ t ++ " tidal " ++ show name ++ " $ " ++ c
+
+utf8String :: String -> O.Datum
+utf8String s = AsciiString $ encodeUtf8 $ T.pack s
+
+toUTF8 :: O.Ascii -> String
+toUTF8 x = T.unpack $ decodeUtf8 x
 
 newRemoteAddress :: String -> Int -> Game ()
 newRemoteAddress addr port = do
@@ -143,7 +151,7 @@ connect = do
                 Nothing -> return ()
                 Just port -> do
                   newRemoteAddress add port
-                  sendMessageRemote (O.p_message "/sit" [O.string name])
+                  sendMessageRemote (O.p_message "/sit" [utf8String name])
 
 --------------------------------------------------------
 --------- acting on responses from the table -----------
@@ -158,12 +166,12 @@ playingHand = do
 
 act :: Maybe O.Message -> Game ()
 act (Just (Message "/ok" [])) = successAction
-act (Just (Message "/ok" [AsciiString x])) = successAction >> liftUI (addMessage (ascii_to_string x))
-act (Just (Message "/error" [AsciiString e])) = errorAction >> liftUI (addMessage (ascii_to_string e))
-act (Just (Message "/joined" [AsciiString name])) = joinedAction (ascii_to_string name)
-act (Just (Message "/define" [AsciiString name, AsciiString defName, AsciiString typ])) = addDefinition (ascii_to_string name) (Def (ascii_to_string defName) (ascii_to_string typ))
-act (Just (Message "/change" [AsciiString name, AsciiString defName])) = changeAction (ascii_to_string name) (ascii_to_string defName)
-act (Just (Message "/message" [AsciiString msg])) = messageAction (ascii_to_string msg)
+act (Just (Message "/ok" [AsciiString x])) = successAction >> liftUI (addMessage (toUTF8 x))
+act (Just (Message "/error" [AsciiString e])) = errorAction >> liftUI (addMessage (toUTF8 e))
+act (Just (Message "/joined" [AsciiString name])) = joinedAction (toUTF8 name)
+act (Just (Message "/define" [AsciiString name, AsciiString defName, AsciiString typ])) = addDefinition (toUTF8 name) (Def (toUTF8 defName) (toUTF8 typ))
+act (Just (Message "/change" [AsciiString name, AsciiString defName])) = changeAction (toUTF8 name) (toUTF8 defName)
+act (Just (Message "/message" [AsciiString msg])) = messageAction (toUTF8 msg)
 act (Just m) = liftUI $ addMessage ("Unhandeled message: " ++ show m)
 act Nothing = liftUI $ addMessage "Not a message?"
 
@@ -208,7 +216,7 @@ joinedAction :: String -> Game ()
 joinedAction name = liftUI $ addMessage (name ++ " joined the game!")
 
 changeAction :: String -> String -> Game ()
-changeAction name def = liftUI $ addMessage (name ++ " changed the definition of " ++ def ++ ".")
+changeAction name def = liftUI $ addMessage (name ++ " changed the definition of " ++ def)
 
 messageAction :: String -> Game ()
 messageAction msg = liftUI $ addMessage msg

@@ -36,7 +36,8 @@ executable cl-player
                       parsec,
                       time,
                       mtl,
-                      exceptions
+                      exceptions,
+                      text
     hs-source-dirs:   app
     default-language: Haskell2010
     ghc-options: -threaded
