@@ -16,15 +16,6 @@ data EvalMode
   | EvalLine
   deriving (Eq, Show)
 
--- TODO : maybe replace with ReaderT?
-type Game = StateT Env UI
-
-instance MonadUI Game where
-  liftUI = lift . liftUI
-
-runGame :: Game a -> Env -> UI (a, Env)
-runGame = runStateT
-
 type Range = MVar (Int, Int)
 
 type TableAddress = N.SockAddr
