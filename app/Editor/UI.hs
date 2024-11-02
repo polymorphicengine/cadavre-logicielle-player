@@ -1,5 +1,4 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 {-# OPTIONS_GHC -Wno-missing-signatures #-}
 
 module Editor.UI where
@@ -30,6 +29,7 @@ import Control.Monad (void)
 import Control.Monad.Catch (catch)
 import Data.Time
 import Editor.Parse (isValidAddress, isValidName)
+import Editor.Types
 import Foreign.JavaScript (JSObject)
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core as C hiding (get, text, value)
@@ -164,3 +164,15 @@ getPort = do
       case readMaybe x of
         Nothing -> addMessage "please insert a valid port" >> return Nothing
         Just port -> return $ Just port
+
+mkDefinition :: Definition -> UI Element
+mkDefinition d = UI.pre #. "definition" #@ defID d # set UI.text (show d)
+
+defID :: Definition -> String
+defID d = "def-" ++ dName d
+
+mkPlayer :: Player -> UI Element
+mkPlayer p = UI.pre #. "definition" #@ playerID p # set UI.text (show p)
+
+playerID :: Player -> String
+playerID p = "player-" ++ pName p

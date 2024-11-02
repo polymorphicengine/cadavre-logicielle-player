@@ -1,7 +1,6 @@
 module Editor.Parse where
 
 import Control.Monad (void)
-import Data.List (intercalate)
 import Text.Parsec
 import Text.Parsec.String
 
@@ -13,9 +12,7 @@ data Command
   | Definition String String String
   | Ping
   | NoCommand
-  | Sit String
   | Say String
-  | RemoteAddress String Int
   deriving (Show)
 
 data Block = Block
@@ -62,14 +59,6 @@ parsePing = do
   _ <- string ":ping"
   return Ping
 
-parseSit :: Parser Command
-parseSit = do
-  whitespace
-  _ <- string ":sit"
-  whitespace
-  s <- many1 (letter <|> digit <|> char '_' <|> char '-')
-  return (Sit s)
-
 parseSay :: Parser Command
 parseSay = do
   whitespace
@@ -81,21 +70,11 @@ parseSay = do
       c <- noneOf "-"
       return $ x ++ [c]
 
-parseRemoteAddress :: Parser Command
-parseRemoteAddress = do
-  whitespace
-  _ <- string ":remote"
-  whitespace
-  add <- many (digit <|> char '.')
-  _ <- string ":"
-  d <- many digit
-  return $ RemoteAddress add (read d)
-
 parseStatement :: Parser Command
 parseStatement = Statement <$> many1 anyChar
 
 parseCommand :: Parser Command
-parseCommand = try parseDef <|> try parseType <|> try parsePing <|> try parseSit <|> try parseSay <|> try parseRemoteAddress <|> parseStatement <|> return NoCommand
+parseCommand = try parseDef <|> try parseType <|> try parsePing <|> try parseSay <|> parseStatement <|> return NoCommand
 
 -- parsing blocks
 

@@ -23,8 +23,10 @@ module Editor.Setup (setup) where
 import Control.Concurrent (forkIO)
 import Control.Concurrent.MVar (newEmptyMVar, newMVar)
 import Control.Monad (void)
+import Editor.Act
 import Editor.Backend
 import Editor.Frontend
+import Editor.Types
 import Editor.UI
 import Graphics.UI.Threepenny.Core as C hiding (defaultConfig, text)
 import qualified Network.Socket as N
@@ -46,12 +48,13 @@ setupBackend = do
 
   rMV <- liftIO newEmptyMVar
   remMV <- liftIO $ newMVar remote
-  let st = State local remMV [] rMV
-  _ <- liftIO $ forkIO $ runUI win $ void $ runGame playingHand st
+  let env = Env local remMV rMV
+      st = ActState [] []
+  _ <- liftIO $ forkIO $ runUI win $ void $ runAct (playingHand env) st
 
-  createHaskellFunction "evalBlockAtCursor" (\cm -> runUI win $ void $ runGame (evalContentAtCursor EvalBlock cm) st)
-  createHaskellFunction "evalLineAtCursor" (\cm -> runUI win $ void $ runGame (evalContentAtCursor EvalLine cm) st)
-  createHaskellFunction "connect" (runUI win $ void $ runGame connect st)
+  createHaskellFunction "evalBlockAtCursor" (runUI win . evalContentAtCursor EvalBlock env)
+  createHaskellFunction "evalLineAtCursor" (runUI win . evalContentAtCursor EvalLine env)
+  createHaskellFunction "connect" (runUI win $ connect env)
 
 addFileInputAndSettings :: UI ()
 addFileInputAndSettings = do

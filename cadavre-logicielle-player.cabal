@@ -25,6 +25,8 @@ executable cl-player
                       Editor.UI
                       Editor.CommandLine
                       Editor.Parse
+                      Editor.Types
+                      Editor.Act
     build-depends:    base >= 4.19,
                       containers,
                       threepenny-gui,
