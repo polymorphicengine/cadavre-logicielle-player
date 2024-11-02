@@ -9,7 +9,7 @@ type Position = (Int, Int)
 data Command
   = Type String
   | Statement String
-  | Definition String String String
+  | Definition String String
   | Ping
   | NoCommand
   | Say String
@@ -43,15 +43,13 @@ parseDefType = string "Int" <|> string "Double" <|> string "Bool" <|> string "VM
 parseDef :: Parser Command
 parseDef = do
   whitespace
-  _ <- string ":define"
-  whitespace
   l <- letter
   name <- many (letter <|> digit)
   whitespace
-  t <- parseDefType
+  _ <- string "<-"
   whitespace
   c <- many anyChar
-  return (Definition (l : name) t c)
+  return (Definition (l : name) c)
 
 parsePing :: Parser Command
 parsePing = do
@@ -62,6 +60,7 @@ parsePing = do
 parseSay :: Parser Command
 parseSay = do
   whitespace
+  _ <- string "--"
   xs <- sepBy (many (try parser <|> pure <$> noneOf "-")) (string "--")
   return (Say $ concat $ concat xs)
   where

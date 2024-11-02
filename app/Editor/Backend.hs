@@ -36,7 +36,7 @@ actOnCommand :: Command -> Env -> UI ()
 actOnCommand (Statement str) env = sendMessageRemote (O.p_message "/eval" [utf8String str]) env
 actOnCommand (Type str) env = sendMessageRemote (O.p_message "/type" [utf8String str]) env
 actOnCommand Ping env = sendMessageRemote (O.p_message "/ping" []) env
-actOnCommand (Definition n t c) env = defAction n t c env
+actOnCommand (Definition name code) env = sendMessageRemote (O.p_message "/define" [utf8String name, utf8String code]) env
 actOnCommand NoCommand _ = addMessage "Could not parse."
 actOnCommand (Say x) env = sendMessageRemote (O.p_message "/say" [utf8String x]) env
 
@@ -59,12 +59,6 @@ parseBlocks mode cm env = do
           let rMV = sRange env
           _ <- liftIO $ tryPutMVar rMV (bStart b, bEnd b)
           return c
-
-defAction :: String -> String -> String -> Env -> UI ()
-defAction name t c = sendMessageRemote (O.p_message "/define" [utf8String name, utf8String t, utf8String code, utf8String def])
-  where
-    def = "let " ++ name ++ " = _define" ++ t ++ "\"" ++ name ++ "\""
-    code = "streamSet" ++ t ++ " tidal " ++ show name ++ " $ " ++ c
 
 connect :: Env -> UI ()
 connect env = do
