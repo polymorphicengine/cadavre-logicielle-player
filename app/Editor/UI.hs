@@ -29,7 +29,7 @@ import Control.Exception (SomeException)
 import Control.Monad (void)
 import Control.Monad.Catch (catch)
 import Data.Time
-import Editor.Parse (isValidAddress)
+import Editor.Parse (isValidAddress, isValidName)
 import Foreign.JavaScript (JSObject)
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core as C hiding (get, text, value)
@@ -130,8 +130,10 @@ getName = do
   mayname <- getTextWithID "name-input"
   case mayname of
     Nothing -> return Nothing
-    Just "" -> addMessage "please insert a name" >> return Nothing
-    x -> return x
+    Just name ->
+      if isValidName name
+        then return $ Just name
+        else addMessage "please insert a name" >> return Nothing
 
 getOrbit :: UI (Maybe Int)
 getOrbit = do
@@ -148,8 +150,10 @@ getAddress = do
   mayadd <- getTextWithID "address-input"
   case mayadd of
     Nothing -> return Nothing
-    Just add -> do
-      (if isValidAddress add || add == "localhost" then return $ Just add else addMessage "please insert a valid address" >> return Nothing)
+    Just add ->
+      if isValidAddress add
+        then return $ Just add
+        else addMessage "please insert a valid address" >> return Nothing
 
 getPort :: UI (Maybe Int)
 getPort = do

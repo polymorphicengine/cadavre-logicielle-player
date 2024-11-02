@@ -147,12 +147,22 @@ isValidAddress x = case parse parseAddress "" x of
   Left _ -> False
   Right _ -> True
 
+isValidName :: String -> Bool
+isValidName x = case parse parseName "" x of
+  Left _ -> False
+  Right _ -> True
+
 parseAddress :: Parser ()
-parseAddress = do
-  count 3 digit
-  char '.'
-  count 3 digit
-  char '.'
-  digit
-  many1 digit
-  return ()
+parseAddress = ip <|> void (string "localhost")
+  where
+    ip = do
+      count 3 digit
+      char '.'
+      count 3 digit
+      char '.'
+      digit
+      many1 digit
+      return ()
+
+parseName :: Parser ()
+parseName = void (many1 (letter <|> digit <|> char '_' <|> char '-'))

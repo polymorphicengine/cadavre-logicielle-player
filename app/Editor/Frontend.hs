@@ -84,8 +84,8 @@ orbitInput = UI.div #+ [UI.label # set UI.text "orbit:" #. "label", input "orbit
 addressInput :: UI Element
 addressInput =
   UI.div
-    #+ [ UI.div #+ [UI.label # set UI.text "address:" #. "label", input "address-input"] #. "input",
-         UI.div #+ [UI.label # set UI.text "port:" #. "label", input "port-input"] #. "input"
+    #+ [ UI.div #+ [UI.label # set UI.text "address:" #. "label", input "address-input" # set UI.text "localhost"] #. "input",
+         UI.div #+ [UI.label # set UI.text "port:" #. "label", input "port-input" # set UI.text "2323"] #. "input"
        ]
     #. "address-input-container"
 
