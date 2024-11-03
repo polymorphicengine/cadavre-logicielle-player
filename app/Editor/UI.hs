@@ -172,7 +172,7 @@ defID :: Definition -> String
 defID d = "def-" ++ dName d
 
 mkPlayer :: Player -> UI Element
-mkPlayer p = UI.pre #. "definition" #@ playerID p # set UI.text (show p)
+mkPlayer p = UI.pre #. "player" #@ playerID p # set UI.text (show p)
 
 playerID :: Player -> String
 playerID p = "player-" ++ pName p
