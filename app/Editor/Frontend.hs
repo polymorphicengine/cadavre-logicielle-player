@@ -55,7 +55,7 @@ container :: UI Element
 container = UI.div #. "container" #+ [messageContainer, editor, rightContainer]
 
 editor :: UI Element
-editor = UI.div #. "main" #+ [UI.textarea # set UI.id_ "editor"]
+editor = UI.div #+ [UI.textarea #@ "editor"]
 
 messageContainer :: UI Element
 messageContainer = UI.div #. "message-container" #@ "message-container"
@@ -84,10 +84,10 @@ orbitInput = UI.div #+ [UI.label # set UI.text "orbit:" #. "label", input "orbit
 addressInput :: UI Element
 addressInput =
   UI.div
+    #. "add-input"
     #+ [ UI.div #+ [UI.label # set UI.text "address:" #. "label", input "address-input" # set UI.text "localhost"] #. "input",
          UI.div #+ [UI.label # set UI.text "port:" #. "label", input "port-input" # set UI.text "2323"] #. "input"
        ]
-    #. "address-input-container"
 
 connectButton :: UI Element
 connectButton = UI.button #. "button" #@ "connect-button" # set UI.text "connect" # set (attr "onclick") "connect()"

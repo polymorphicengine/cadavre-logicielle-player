@@ -1,11 +1,21 @@
-.main {
-    height: 95vh;
+.input-container {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    grid-template-rows: 1fr;
+    height: 3vh;
+    margin: 0px;
+    padding: 0px;
 }
 
-.editor {
-    overflow: hidden;
-    border: 1px solid black;
-    background: black;
+.container {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 1fr;
+    grid-template-rows: 1fr;
+    border: 2px solid #dedede;
+    border-radius: 2px;
+    height: calc(97vh - 4px);
+    margin: 0px;
+    padding: 0px;
 }
 
 .message-container {
@@ -14,6 +24,19 @@
     padding: 10px;
     overflow-wrap: break-word;
     overflow: hidden;
+}
+
+.editor {
+    overflow: hidden;
+    background: black;
+}
+
+.right-container {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #dedede;
+    border-radius: 2px;
+    padding: 10px;
 }
 
 .message {
@@ -28,19 +51,12 @@
     white-space: pre-wrap;
 }
 
-.right-container {
-    display: flex;
-    flex-direction: column;
-    border: 2px solid #dedede;
-    border-radius: 2px;
-}
-
 .player-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     grid-auto-rows: 1fr;
     border-bottom: 2px solid #dedede;
-    border-radius: 2px
+    border-radius: 2px;
     background-color: black;
     overflow-wrap: break-word;
 }
@@ -84,25 +100,7 @@
     overflow-wrap: anywhere;
 }
 
-.container {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr 1fr;
-    grid-template-rows: 1fr;
-    border: 2px solid #dedede;
-    border-radius: 2px;
-    height: 95vh;
-}
-
-.input-container {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr 1fr;
-    grid-template-rows: 1fr;
-    border: 2px solid #dedede;
-    border-radius: 2px;
-    height: 4vh;
-}
-
-.address-input-container {
+.add-input {
     display: flex;
     flex-direction: row;
 }
@@ -124,7 +122,7 @@
 
 .input {
     display: flex;
-    align-items: center;
+    flex-direction: row;
 }
 
 .label {
@@ -136,10 +134,8 @@
 .button {
     font-size: 2.5vh;
     font-family: monospace;
-}
-
-.editor {
-    font-size: 2.5vh;
+    padding: 0px;
+    margin: 0px;
 }
 
 body {
