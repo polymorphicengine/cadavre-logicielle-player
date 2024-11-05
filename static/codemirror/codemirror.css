@@ -4,7 +4,6 @@
     /* Set height, width, borders, and global font properties here */
     font-family: monospace;
     height: calc(97vh - 4px) !important;
-    width: 42.85714vw !important;
     background-color: black !important;
     direction: ltr;
     font-size: 2.5vh !important;
