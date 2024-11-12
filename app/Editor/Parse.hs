@@ -44,7 +44,7 @@ parseDef :: Parser Command
 parseDef = do
   whitespace
   l <- letter
-  name <- many (letter <|> digit <|> char '_')
+  name <- many (letter <|> digit <|> char '_' <|> char '-')
   whitespace
   _ <- string "<-"
   whitespace
