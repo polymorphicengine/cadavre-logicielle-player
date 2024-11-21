@@ -52,7 +52,7 @@ fileInput =
     # set style [("display", "none")]
 
 container :: UI Element
-container = UI.div #. "container" #+ [messageContainer, editor, rightContainer]
+container = UI.div #. "container" #+ [rightContainer, editor, messageContainer]
 
 editor :: UI Element
 editor = UI.div #+ [UI.textarea #@ "editor"]
