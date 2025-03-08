@@ -31,6 +31,7 @@ import Foreign.JavaScript (JSObject)
 import Graphics.UI.Threepenny.Core as C hiding (get, text)
 import qualified Network.Socket as N
 import Sound.Osc.Fd as O
+import qualified Sound.Osc.Transport.Fd.Udp as O
 
 actOnCommand :: Command -> Env -> UI ()
 actOnCommand (Statement str) env = sendMessageRemote (O.p_message "/eval" [utf8String str]) env

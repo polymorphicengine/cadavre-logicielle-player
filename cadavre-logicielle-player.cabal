@@ -27,14 +27,14 @@ executable cl-player
                       Editor.Parse
                       Editor.Types
                       Editor.Act
-    build-depends:    base >= 4.19,
+    build-depends:    base >= 4.19 && < 4.22,
                       containers,
                       threepenny-gui,
                       filepath,
                       directory,
                       optparse-applicative,
                       network,
-                      hosc,
+                      hosc >= 0.21.1 && < 0.22,
                       parsec,
                       time,
                       mtl,

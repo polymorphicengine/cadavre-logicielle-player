@@ -8,8 +8,8 @@ import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Graphics.UI.Threepenny (MonadUI, UI, liftUI)
 import qualified Network.Socket as N
-import Sound.Osc (Udp)
 import qualified Sound.Osc as O
+import Sound.Osc.Transport.Fd.Udp (Udp)
 
 data EvalMode
   = EvalBlock

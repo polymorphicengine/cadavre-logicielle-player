@@ -30,7 +30,7 @@ import Editor.Types
 import Editor.UI
 import Graphics.UI.Threepenny.Core as C hiding (defaultConfig, text)
 import qualified Network.Socket as N
-import Sound.Osc.Fd as O
+import Sound.Osc.Transport.Fd.Udp (udp_server)
 
 setup :: Window -> UI ()
 setup win = void $ do
