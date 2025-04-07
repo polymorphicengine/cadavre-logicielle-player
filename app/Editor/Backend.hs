@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# OPTIONS_GHC -Wno-incomplete-uni-patterns #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 module Editor.Backend where
@@ -35,9 +36,9 @@ import qualified Sound.Osc.Transport.Fd.Udp as O
 
 actOnCommand :: Command -> Env -> UI ()
 actOnCommand (Statement str) env = sendMessageRemote (O.p_message "/eval" [utf8String str]) env
-actOnCommand (Type str) env = sendMessageRemote (O.p_message "/type" [utf8String str]) env
 actOnCommand Ping env = sendMessageRemote (O.p_message "/ping" []) env
 actOnCommand (Definition name code) env = sendMessageRemote (O.p_message "/define" [utf8String name, utf8String code]) env
+actOnCommand (Set name code) env = sendMessageRemote (O.p_message "/set" [utf8String name, utf8String code]) env
 actOnCommand NoCommand _ = addMessage "Could not parse."
 actOnCommand (Say x) env = sendMessageRemote (O.p_message "/say" [utf8String x]) env
 

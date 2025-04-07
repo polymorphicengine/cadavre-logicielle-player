@@ -7,9 +7,9 @@ import Text.Parsec.String
 type Position = (Int, Int)
 
 data Command
-  = Type String
-  | Statement String
+  = Statement String
   | Definition String String
+  | Set String String
   | Ping
   | NoCommand
   | Say String
@@ -30,15 +30,16 @@ runParser = parse parseCommand ""
 whitespace :: Parser ()
 whitespace = void $ many $ oneOf " \n\t"
 
-parseType :: Parser Command
-parseType = do
+parseSet :: Parser Command
+parseSet = do
   whitespace
-  _ <- string ":t"
-  s <- many anyChar
-  return (Type s)
-
-parseDefType :: Parser String
-parseDefType = string "Int" <|> string "Double" <|> string "Bool" <|> string "VM" <|> string "String" <|> string "Time" <|> string "Note"
+  l <- letter
+  name <- many (letter <|> digit <|> char '_' <|> char '-')
+  whitespace
+  _ <- string "<-"
+  whitespace
+  c <- many anyChar
+  return (Set (l : name) c)
 
 parseDef :: Parser Command
 parseDef = do
@@ -46,7 +47,7 @@ parseDef = do
   l <- letter
   name <- many (letter <|> digit <|> char '_' <|> char '-')
   whitespace
-  _ <- string "<-"
+  _ <- string "="
   whitespace
   c <- many anyChar
   return (Definition (l : name) c)
@@ -73,7 +74,7 @@ parseStatement :: Parser Command
 parseStatement = Statement <$> many1 anyChar
 
 parseCommand :: Parser Command
-parseCommand = try parseDef <|> try parseType <|> try parsePing <|> try parseSay <|> parseStatement <|> return NoCommand
+parseCommand = try parseDef <|> try parseSet <|> try parsePing <|> try parseSay <|> parseStatement <|> return NoCommand
 
 -- parsing blocks
 
@@ -134,13 +135,12 @@ parseAddress :: Parser ()
 parseAddress = ip <|> void (string "localhost")
   where
     ip = do
-      count 3 digit
-      char '.'
-      count 3 digit
-      char '.'
-      digit
-      many1 digit
-      return ()
+      void $ count 3 digit
+      void $ char '.'
+      void $ count 3 digit
+      void $ char '.'
+      void digit
+      void $ many1 digit
 
 parseName :: Parser ()
 parseName = void (many1 (letter <|> digit <|> char '_' <|> char '-'))
