@@ -60,7 +60,7 @@ jobs:
         run: mkdir build
 
       - name: move executable
-        run: cp -R dist-newstyle/build/x86_64-osx/ghc-${{ matrix.ghc }}/cadavre-logicielle-player-0.1.0.0/x/cl-player/build/cl-player/cl-player build/cl-player
+        run: cp -R dist-newstyle/build/aarch64-osx/ghc-${{ matrix.ghc }}/cadavre-logicielle-player-0.1.0.0/x/cl-player/build/cl-player/cl-player build/cl-player
 
       - name: move static
         run: cp -R static build/static
