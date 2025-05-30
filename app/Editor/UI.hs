@@ -150,10 +150,11 @@ getAddress = do
   mayadd <- getTextWithID "address-input"
   case mayadd of
     Nothing -> return Nothing
-    Just add ->
-      if isValidAddress add
-        then return $ Just add
-        else addMessage "please insert a valid address" >> return Nothing
+    Just add -> return (Just add)
+
+-- if isValidAddress add
+--   then return $ Just add
+--   else addMessage "please insert a valid address" >> return Nothing
 
 getPort :: UI (Maybe Int)
 getPort = do
