@@ -7,11 +7,15 @@ on:
 
 jobs:
   build:
-    runs-on: macOS-latest
+    runs-on: macos-${{ matrix.os-version }}
     strategy:
       matrix:
         ghc: ["9.8.2"]
         cabal: ["3.10.3.0"]
+        os-version: [
+          "latest",
+          "13", # macos-13 runners are still intel
+        ]
 
     steps:
       - name: Check out code
@@ -60,7 +64,7 @@ jobs:
         run: mkdir build
 
       - name: move executable
-        run: cp -R dist-newstyle/build/aarch64-osx/ghc-${{ matrix.ghc }}/cadavre-logicielle-player-0.1.0.0/x/cl-player/build/cl-player/cl-player build/cl-player
+        run: cp -R dist-newstyle/build/*/ghc-${{ matrix.ghc }}/cadavre-logicielle-player-0.1.0.0/x/cl-player/build/cl-player/cl-player build/cl-player
 
       - name: move static
         run: cp -R static build/static
